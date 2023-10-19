@@ -33,7 +33,7 @@ function displayPuzzle(puzzle) {
 		display += `| ${puzzle[i]} ` + (puzzle[i] >= 10 ? '' : ' ')
 		if(i % 4 == 3) display += '|'
 	}
-	
+
 	display += horizontalBar
 
 	console.log(display)
@@ -45,13 +45,58 @@ function solvePuzzleBDF(puzzle) {
 
 	states = nextStates(puzzle)
 
+	for(const state of states) {
+		displayPuzzle(state)
+	}
+}
 
+function nextStates(puzzle) {
+	// The next puzzle states that can result from the current puzzle
+	const states = []
+
+	// Move the four (or less) tiles around the 0
+	zeroIndex = puzzle.indexOf(0)
+
+	topIndex = zeroIndex > 3 ? zeroIndex - 4 : -1
+	bottomIndex = zeroIndex < 12 ? zeroIndex + 4 : -1
+	leftIndex = zeroIndex % 4 != 0 ? zeroIndex - 1 : -1
+	rightIndex = zeroIndex % 4 != 3 ? zeroIndex + 1 : -1
+
+	// Swaps (or moves) the blocks at each position with the 0 block
+	if(topIndex != -1) {
+		p = puzzle.slice()
+		p[zeroIndex] = p[topIndex]
+		p[topIndex] = 0
+		states.push(p)
+	}
+	if(bottomIndex != -1) {
+		p = puzzle.slice()
+		p[zeroIndex] = p[bottomIndex]
+		p[bottomIndex] = 0
+		states.push(p)
+	}
+	if(leftIndex != -1) {
+		p = puzzle.slice()
+		p[zeroIndex] = p[leftIndex]
+		p[leftIndex] = 0
+		states.push(p)
+	}
+	if(rightIndex != -1) {
+		p = puzzle.slice()
+		p[zeroIndex] = p[rightIndex]
+		p[rightIndex] = 0
+		states.push(p)
+	}
+
+	return states
 }
 
 function main() {
 	puzzle = generatePuzzle()
 
 	displayPuzzle(puzzle)
+
+	solvePuzzleBDF(puzzle)
 }
 
 main()
