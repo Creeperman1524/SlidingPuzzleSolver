@@ -40,14 +40,40 @@ function displayPuzzle(puzzle) {
 }
 
 // A solver that uses the BDF algorithm
-function solvePuzzleBDF(puzzle) {
-	const queue = [];
+function solvePuzzleBFS(starting_state) {
+	const queue = [starting_state];				// The queue of states we still need to check
+	const processedStates = { starting_state: null };	// A list of all states we have visited to not duplicate
 
-	const states = nextStates(puzzle);
+	while(queue.length != 0) {
+		let current_state = queue.pop();
 
-	for(const state of states) {
-		displayPuzzle(state);
+		// We solved it
+		if(checkSolved(current_state)) {
+			console.log('Found a solution!');
+
+			displayPuzzle(current_state);
+
+			// Reversed back up the tree to find the solution
+			const path = [current_state];
+			while(processedStates[current_state] != null) {
+				current_state = processedStates[current_state];
+				path.push(current_state);
+			}
+
+			return path; // Returns the (backwards) path leading to the solution
+		}
+
+		// We didn't solve it, so try more combinations
+		for(const nextState of nextStates(current_state)) {
+			// Check if we already saw that state
+			if(!(nextState in processedStates)) {
+				queue.push(nextState);
+				processedStates[nextState] = current_state;
+			}
+		}
 	}
+
+	console.log('No solution :(');
 }
 
 function nextStates(puzzle) {
@@ -91,12 +117,20 @@ function nextStates(puzzle) {
 	return states;
 }
 
+function checkSolved(puzzle) {
+	for (let i = 0; i < COMPLETED_PUZZLE.length - 1; i++) {
+		if(puzzle[i] != i + 1) return false;
+	}
+	return true;
+}
+
 function main() {
 	const puzzle = generatePuzzle();
 
 	displayPuzzle(puzzle);
 
-	solvePuzzleBDF(puzzle);
+	const path = solvePuzzleBFS(puzzle);
+	console.log(path);
 }
 
 main();
