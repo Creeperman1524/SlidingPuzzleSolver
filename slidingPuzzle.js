@@ -1,4 +1,4 @@
-// The completed puzzle
+// The completed puzzle (4x4)
 // The 0 tile represents the space
 /**
 0  1  2  3
@@ -6,14 +6,23 @@
 8  9  10 11
 12 13 14 15
 */
-const COMPLETED_PUZZLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+
+// Creates the completed puzzle with variable size
+const SIZE = 3;
+
+const COMPLETED_PUZZLE = [];
+for (let i = 0; i < SIZE * SIZE - 1; i++) {
+	COMPLETED_PUZZLE.push(i + 1);
+}
+COMPLETED_PUZZLE.push(0);
+
 // The global start time to track how long it takes
 let startTime = 0;
 
 // Generates a random sliding puzzle (not guaranteed to be solvable ?)
 function generatePuzzle() {
 	const puzzle = [];
-	const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+	const nums = COMPLETED_PUZZLE.slice(); // Copies the array
 
 	for (let i = 0; i < COMPLETED_PUZZLE.length; i++) {
 		const randomIndex = Math.floor(Math.random() * nums.length);
@@ -26,14 +35,20 @@ function generatePuzzle() {
 	return puzzle;
 }
 
+// Creates the dynamic horizontal bar
+let horizontalBar = '\n';
+for (let i = 0; i < SIZE; i++) {
+	horizontalBar += '-----';
+}
+horizontalBar += '-\n';
+
 function displayPuzzle(puzzle) {
 	let display = '';
 
-	const horizontalBar = '\n---------------------\n';
 	for (let i = 0; i < puzzle.length; i++) {
-		if(i % 4 == 0) display += horizontalBar;
+		if(i % SIZE == 0) display += horizontalBar;
 		display += `| ${puzzle[i]} ` + (puzzle[i] >= 10 ? '' : ' ');
-		if(i % 4 == 3) display += '|';
+		if(i % SIZE == SIZE - 1) display += '|';
 	}
 
 	display += horizontalBar;
@@ -132,10 +147,10 @@ function nextStates(puzzle) {
 	// Move the four (or less) tiles around the 0
 	const zeroIndex = puzzle.indexOf(0);
 
-	const topIndex = zeroIndex > 3 ? zeroIndex - 4 : -1;
-	const bottomIndex = zeroIndex < 12 ? zeroIndex + 4 : -1;
-	const leftIndex = zeroIndex % 4 != 0 ? zeroIndex - 1 : -1;
-	const rightIndex = zeroIndex % 4 != 3 ? zeroIndex + 1 : -1;
+	const topIndex = zeroIndex > SIZE - 1 ? zeroIndex - SIZE : -1;
+	const bottomIndex = zeroIndex < SIZE * (SIZE - 1) ? zeroIndex + SIZE : -1;
+	const leftIndex = zeroIndex % SIZE != 0 ? zeroIndex - 1 : -1;
+	const rightIndex = zeroIndex % SIZE != SIZE - 1 ? zeroIndex + 1 : -1;
 
 	// Swaps (or moves) the blocks at each position with the 0 block
 	if(topIndex != -1) {
@@ -198,7 +213,7 @@ function calculateHeuristic(state) {
 // Calculates the Manhattan distance between where the tile
 // is and where it should be
 function movesAway(a, b) {
-	return Math.abs((a % 4) - (b % 4)) + Math.abs(Math.floor(a / 4) - Math.floor(b / 4));
+	return Math.abs((a % SIZE) - (b % SIZE)) + Math.abs(Math.floor(a / SIZE) - Math.floor(b / SIZE));
 }
 
 function checkSolved(puzzle) {
@@ -209,6 +224,11 @@ function checkSolved(puzzle) {
 }
 
 function main() {
+	if(SIZE < 3) {
+		console.error('SIZE IS TOO SMALL');
+		return;
+	}
+
 	const puzzle = generatePuzzle();
 
 	displayPuzzle(puzzle);
