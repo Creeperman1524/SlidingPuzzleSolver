@@ -60,8 +60,9 @@ let last = 99;
 
 // A solver that uses the A* algorithm
 function solvePuzzleAStar(starting_state) {
-	let priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];				// The queue of states we still need to check
-	const processedStates = { starting_state: null };	// A list of all states we have visited to not duplicate
+	let priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];	// The queue of states we still need to check [state, heuristic]
+	const processedStates = {};														// A list of all states we have visited to not duplicate [previous state, move to get to state]
+	processedStates[starting_state] = [null, null];
 
 	while(priorityQueue.length != 0) {
 		let current_state = priorityQueue.pop()[0];
@@ -73,21 +74,24 @@ function solvePuzzleAStar(starting_state) {
 			displayPuzzle(current_state);
 
 			// Reversed back up the tree to find the solution
-			const path = [current_state];
-			while(processedStates[current_state] != null) {
-				current_state = processedStates[current_state];
-				path.push(current_state);
+			const path = [processedStates[current_state][1]];
+			while(processedStates[current_state][0] != null) {
+				current_state = processedStates[current_state][0];
+				path.push(processedStates[current_state][1]);
 			}
 
-			return path; // Returns the (backwards) path leading to the solution
+			return path.slice(0, path.length - 1).reverse(); // Returns the (backwards) path leading to the solution
 		}
 
 		// We didn't solve it, so try more combinations
 		for(const nextState of nextStates(current_state)) {
+			const nextBoardState = nextState[0];
+			const moveOfState = nextState[1];
+
 			// Check if we already saw that state
-			if(!(nextState in processedStates)) {
-				priorityQueue.push([nextState, calculateHeuristic(nextState)]);
-				processedStates[nextState] = current_state;
+			if(!(nextBoardState in processedStates)) {
+				priorityQueue.push([nextBoardState, calculateHeuristic(nextBoardState)]);
+				processedStates[nextBoardState] = [current_state, moveOfState];
 			}
 		}
 
@@ -103,6 +107,10 @@ function solvePuzzleAStar(starting_state) {
 	console.log('No solution :(');
 }
 
+// Returns a list of the next possible board states from
+// a starting state in the form of
+// [[puzzle, move],[puzzle, move]]
+// Move: 1 = top, 2 = bottom, 3 = left, 4 = right
 function nextStates(puzzle) {
 	// The next puzzle states that can result from the current puzzle
 	const states = [];
@@ -120,25 +128,25 @@ function nextStates(puzzle) {
 		const p = puzzle.slice();
 		p[zeroIndex] = p[topIndex];
 		p[topIndex] = 0;
-		states.push(p);
+		states.push([p, 1]);
 	}
 	if(bottomIndex != -1) {
 		const p = puzzle.slice();
 		p[zeroIndex] = p[bottomIndex];
 		p[bottomIndex] = 0;
-		states.push(p);
+		states.push([p, 2]);
 	}
 	if(leftIndex != -1) {
 		const p = puzzle.slice();
 		p[zeroIndex] = p[leftIndex];
 		p[leftIndex] = 0;
-		states.push(p);
+		states.push([p, 3]);
 	}
 	if(rightIndex != -1) {
 		const p = puzzle.slice();
 		p[zeroIndex] = p[rightIndex];
 		p[rightIndex] = 0;
-		states.push(p);
+		states.push([p, 4]);
 	}
 
 	return states;
@@ -195,10 +203,18 @@ function main() {
 	const puzzle = generatePuzzle();
 
 	displayPuzzle(puzzle);
-	console.log(calculateHeuristic(puzzle));
 
 	startTime = Date.now();
 	const path = solvePuzzleAStar(puzzle);
+
+	// TODO: solution doesn't seem to be optimal
+	console.log('Solution length: ' + path.length);
+
+	const directions = [null, 'top', 'bottom', 'left', 'right'];
+	for (const direction of path) {
+		console.log(directions[direction]);
+	}
+
 }
 
 main();
