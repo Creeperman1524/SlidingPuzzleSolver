@@ -1,23 +1,15 @@
-// The completed puzzle (4x4)
-// The 0 tile represents the space
-/**
-0  1  2  3
-4  5  6  7
-8  9  10 11
-12 13 14 15
-*/
-
-// Creates the completed puzzle with variable size
+// The varialbe size of the puzzle
 const SIZE = 4;
 let timeSpent = 0;
 
+// An array of the completed puzzle to compare to
 const COMPLETED_PUZZLE = [];
 for (let i = 0; i < SIZE * SIZE - 1; i++) {
 	COMPLETED_PUZZLE.push(i + 1);
 }
 COMPLETED_PUZZLE.push(0);
 
-// The global start time to track how long it takes
+// The global start time to track how long it takes to solve
 let startTime = 0;
 
 // Generates a random sliding puzzle (not guaranteed to be solvable ?)
@@ -36,13 +28,14 @@ function generatePuzzle() {
 	return puzzle;
 }
 
-// Creates the dynamic horizontal bar
+// Creates the dynamic horizontal bar for displaying
 let horizontalBar = '\n';
 for (let i = 0; i < SIZE; i++) {
 	horizontalBar += '-----';
 }
 horizontalBar += '-\n';
 
+// Displays the current puzzle to the console
 function displayPuzzle(puzzle) {
 	let display = '';
 
@@ -57,18 +50,21 @@ function displayPuzzle(puzzle) {
 	console.log(display);
 }
 
+// The lowest calculated heuristic for logging purposes
 let last = 99;
 
-// A solver that uses the A* algorithm
+// Solves the puzzle using the A* method
+// with a Manhattan Distance heuristic
 function solvePuzzleAStar(starting_state) {
 	const priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];	// The queue of states we still need to check [state, heuristic]
 	const processedStates = {};														// A list of all states we have visited to not duplicate [previous state, move to get to state]
 	processedStates[starting_state] = [null, null];
 
+	// Continuously processes the queue of the states with the lowest heuristic
 	while(priorityQueue.length != 0) {
 		let current_state = priorityQueue.pop()[0];
 
-		// We solved it
+		// If we solved the puzzle, returns the moveset to solve it
 		if(checkSolved(current_state)) {
 			console.log('Found a solution!');
 
@@ -84,36 +80,37 @@ function solvePuzzleAStar(starting_state) {
 			return path.slice(0, path.length - 1).reverse(); // Returns the (backwards) path leading to the solution
 		}
 
-		// We didn't solve it, so try more combinations
+		// We didn't solve it, so try all other combinations from that state
 		for(const nextState of nextStates(current_state)) {
 			const nextBoardState = nextState[0];
 			const moveOfState = nextState[1];
 
-			// Check if we already saw that state
-			if(!(nextBoardState in processedStates)) {
-				const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState)];
-				const start = Date.now();
-				let pushed = false;
+			// If we've seen the state, don't check it again
+			if(nextBoardState in processedStates) continue;
 
-				// TODO: switch to binary search for O(log n)
-				for (let i = 0; i < priorityQueue.length; i++) {
-					if(nextInQueue[1] >= priorityQueue[i][1]) {
-						priorityQueue.splice(i, 0, nextInQueue); // Splices (or inserts) into the correct sorted position
-						pushed = true;
-						break;
-					}
+			const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState)];
+			const start = Date.now();
+			let pushed = false;
+
+			// TODO: switch to binary search for O(log n)
+			// Inserts the new state based on the calculated heuristic in reverse numerical order
+			for (let i = 0; i < priorityQueue.length; i++) {
+				if(nextInQueue[1] >= priorityQueue[i][1]) {
+					priorityQueue.splice(i, 0, nextInQueue);
+					pushed = true;
+					break;
 				}
-				if(!pushed) priorityQueue.push(nextInQueue);
-				timeSpent += Date.now() - start;
-
-				processedStates[nextBoardState] = [current_state, moveOfState];
 			}
+			if(!pushed) priorityQueue.push(nextInQueue);
+			timeSpent += Date.now() - start;
+
+			processedStates[nextBoardState] = [current_state, moveOfState];
 		}
 
+		// Logs the lowest heuristic found
 		if(priorityQueue[priorityQueue.length - 1][1] < last) {
 			last = priorityQueue[priorityQueue.length - 1][1];
 			console.log(`Closest Solution Found: ${last} in ${(Date.now() - startTime) / 1000}s`);
-			if(last < 4) displayPuzzle(priorityQueue[priorityQueue.length - 1][0]);
 		}
 	}
 
@@ -165,8 +162,7 @@ function nextStates(puzzle) {
 	return states;
 }
 
-// Uses a heuristic of the minimum amount of moves needed
-// to solve the puzzle
+// Uses a heuristic of the minimum amount of moves needed to solve the puzzle
 function calculateHeuristic(state) {
 	let heuristic = 0;
 	for (let i = 0; i < state.length; i++) {
@@ -177,12 +173,12 @@ function calculateHeuristic(state) {
 	return heuristic;
 }
 
-// Calculates the Manhattan distance between where the tile
-// is and where it should be
+// Calculates the Manhattan distance between where the tile is and where it should be
 function movesAway(a, b) {
 	return Math.abs((a % SIZE) - (b % SIZE)) + Math.abs(Math.floor(a / SIZE) - Math.floor(b / SIZE));
 }
 
+// Returns whether the puzzle has been solved
 function checkSolved(puzzle) {
 	for (let i = 0; i < COMPLETED_PUZZLE.length - 1; i++) {
 		if(puzzle[i] != i + 1) return false;
@@ -217,6 +213,6 @@ function main() {
 main();
 
 // puzzle = [1, 13, 9, 7, 6, 5, 10, 12, 14, 15, 0, 8, 2, 3, 11, 4];
-// 18.556s sorting, 18.699s solving 	(bubble sort) 					O(n^2)
-// 3.996s sorting, 4.101s solving 		(merge sort)					O(n log n)
-// 0.032s sorting, 0.137s solving 		(inserting into sorted list)	O(n)
+// 18.556s sorting, 18.699s solving (bubble sort) 					O(n^2)
+// 3.996s sorting, 4.101s solving 	(merge sort)					O(n log n)
+// 0.032s sorting, 0.137s solving 	(inserting into sorted list)	O(n)
