@@ -61,7 +61,7 @@ let last = 99;
 
 // A solver that uses the A* algorithm
 function solvePuzzleAStar(starting_state) {
-	let priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];	// The queue of states we still need to check [state, heuristic]
+	const priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];	// The queue of states we still need to check [state, heuristic]
 	const processedStates = {};														// A list of all states we have visited to not duplicate [previous state, move to get to state]
 	processedStates[starting_state] = [null, null];
 
@@ -91,15 +91,24 @@ function solvePuzzleAStar(starting_state) {
 
 			// Check if we already saw that state
 			if(!(nextBoardState in processedStates)) {
-				priorityQueue.push([nextBoardState, calculateHeuristic(nextBoardState)]);
+				const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState)];
+				const start = Date.now();
+				let pushed = false;
+
+				// TODO: switch to binary search for O(log n)
+				for (let i = 0; i < priorityQueue.length; i++) {
+					if(nextInQueue[1] >= priorityQueue[i][1]) {
+						priorityQueue.splice(i, 0, nextInQueue); // Splices (or inserts) into the correct sorted position
+						pushed = true;
+						break;
+					}
+				}
+				if(!pushed) priorityQueue.push(nextInQueue);
+				timeSpent += Date.now() - start;
+
 				processedStates[nextBoardState] = [current_state, moveOfState];
 			}
 		}
-
-		const start = Date.now();
-		priorityQueue = sortArray(priorityQueue);
-		timeSpent += Date.now() - start;
-
 
 		if(priorityQueue[priorityQueue.length - 1][1] < last) {
 			last = priorityQueue[priorityQueue.length - 1][1];
@@ -156,44 +165,6 @@ function nextStates(puzzle) {
 	return states;
 }
 
-// Sorts the priority queue based on the heuristic
-// using (reverse) merge sort O(n log n)
-function sortArray(arr) {
-	const list = [...arr];
-	if(list.length <= 1) return list;
-
-	// Splits the list in half to be sorted independently
-	const middle = Math.floor(list.length / 2);
-	const leftList = list.slice(0, middle);
-	const rightList = list.slice(middle, list.length);
-
-	const leftSorted = sortArray(leftList);
-	const rightSorted = sortArray(rightList);
-	return mergeLists(leftSorted, rightSorted);
-}
-
-function mergeLists(leftList, rightList) {
-	let sortedList = [];
-
-	// Merges the two sublists in order
-	while(leftList.length && rightList.length) {
-		if(leftList[0][1] >= rightList[0][1]) { // Uses >= instead of <= to sort in reverse
-			sortedList.push(leftList.shift());
-		} else {
-			sortedList.push(rightList.shift());
-		}
-	}
-
-	// If the lists are uneven, add the remaining values
-	if (leftList.length) {
-		sortedList = sortedList.concat(leftList);
-	}
-	if (rightList.length) {
-		sortedList = sortedList.concat(rightList);
-	}
-	return sortedList;
-}
-
 // Uses a heuristic of the minimum amount of moves needed
 // to solve the puzzle
 function calculateHeuristic(state) {
@@ -246,6 +217,6 @@ function main() {
 main();
 
 // puzzle = [1, 13, 9, 7, 6, 5, 10, 12, 14, 15, 0, 8, 2, 3, 11, 4];
-// 18.556s sorting, 18.699s solving (bubble sort)
-// 3.996s sorting, 4.101s solving (merge sort)
-// 
+// 18.556s sorting, 18.699s solving 	(bubble sort) 					O(n^2)
+// 3.996s sorting, 4.101s solving 		(merge sort)					O(n log n)
+// 0.032s sorting, 0.137s solving 		(inserting into sorted list)	O(n)
