@@ -154,7 +154,9 @@ function nextStates(puzzle) {
 
 // Sorts the priority queue based on the heuristic
 // using bubble sort (i'm lazy) O(n^2)
+let timeSpent = 0;
 function sortArray(arr) {
+	const start = Date.now();
 	for (let i = 0; i < arr.length; i++) {
 		for (let j = 0; j < arr.length - i - 1; j++) {
 			if(arr[j][1] < arr[j + 1][1]) { // Tests for the heuristic value
@@ -166,6 +168,7 @@ function sortArray(arr) {
 		}
 	}
 
+	timeSpent += Date.now() - start;
 	return arr;
 }
 
@@ -207,6 +210,7 @@ function main() {
 	startTime = Date.now();
 	const path = solvePuzzleAStar(puzzle);
 
+	console.log('Time spent sorting: ' + timeSpent / 1000 + 's');
 	// TODO: solution doesn't seem to be optimal
 	console.log('Solution length: ' + path.length);
 
