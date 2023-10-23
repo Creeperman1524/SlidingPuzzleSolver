@@ -8,7 +8,8 @@
 */
 
 // Creates the completed puzzle with variable size
-const SIZE = 3;
+const SIZE = 4;
+let timeSpent = 0;
 
 const COMPLETED_PUZZLE = [];
 for (let i = 0; i < SIZE * SIZE - 1; i++) {
@@ -95,7 +96,10 @@ function solvePuzzleAStar(starting_state) {
 			}
 		}
 
+		const start = Date.now();
 		priorityQueue = sortArray(priorityQueue);
+		timeSpent += Date.now() - start;
+
 
 		if(priorityQueue[priorityQueue.length - 1][1] < last) {
 			last = priorityQueue[priorityQueue.length - 1][1];
@@ -153,23 +157,41 @@ function nextStates(puzzle) {
 }
 
 // Sorts the priority queue based on the heuristic
-// using bubble sort (i'm lazy) O(n^2)
-let timeSpent = 0;
+// using (reverse) merge sort O(n log n)
 function sortArray(arr) {
-	const start = Date.now();
-	for (let i = 0; i < arr.length; i++) {
-		for (let j = 0; j < arr.length - i - 1; j++) {
-			if(arr[j][1] < arr[j + 1][1]) { // Tests for the heuristic value
-				// Swap
-				const temp = arr[j];
-				arr[j] = arr[j + 1];
-				arr[j + 1] = temp;
-			}
+	const list = [...arr];
+	if(list.length <= 1) return list;
+
+	// Splits the list in half to be sorted independently
+	const middle = Math.floor(list.length / 2);
+	const leftList = list.slice(0, middle);
+	const rightList = list.slice(middle, list.length);
+
+	const leftSorted = sortArray(leftList);
+	const rightSorted = sortArray(rightList);
+	return mergeLists(leftSorted, rightSorted);
+}
+
+function mergeLists(leftList, rightList) {
+	let sortedList = [];
+
+	// Merges the two sublists in order
+	while(leftList.length && rightList.length) {
+		if(leftList[0][1] >= rightList[0][1]) { // Uses >= instead of <= to sort in reverse
+			sortedList.push(leftList.shift());
+		} else {
+			sortedList.push(rightList.shift());
 		}
 	}
 
-	timeSpent += Date.now() - start;
-	return arr;
+	// If the lists are uneven, add the remaining values
+	if (leftList.length) {
+		sortedList = sortedList.concat(leftList);
+	}
+	if (rightList.length) {
+		sortedList = sortedList.concat(rightList);
+	}
+	return sortedList;
 }
 
 // Uses a heuristic of the minimum amount of moves needed
@@ -222,3 +244,8 @@ function main() {
 }
 
 main();
+
+// puzzle = [1, 13, 9, 7, 6, 5, 10, 12, 14, 15, 0, 8, 2, 3, 11, 4];
+// 18.556s sorting, 18.699s solving (bubble sort)
+// 3.996s sorting, 4.101s solving (merge sort)
+// 
