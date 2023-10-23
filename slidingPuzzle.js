@@ -99,7 +99,7 @@ function solvePuzzleAStar(starting_state) {
 
 		if(priorityQueue[priorityQueue.length - 1][1] < last) {
 			last = priorityQueue[priorityQueue.length - 1][1];
-			console.log(`Minimal Solution: ${last} in ${Date.now() - startTime}ms`);
+			console.log(`Closest Solution Found: ${last} in ${(Date.now() - startTime) / 1000}s`);
 			if(last < 4) displayPuzzle(priorityQueue[priorityQueue.length - 1][0]);
 		}
 	}
