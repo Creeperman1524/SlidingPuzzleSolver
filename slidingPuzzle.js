@@ -56,40 +56,42 @@ let last = 99;
 // Solves the puzzle using the A* method
 // with a Manhattan Distance heuristic
 function solvePuzzleAStar(starting_state) {
-	const priorityQueue = [[starting_state, calculateHeuristic(starting_state)]];	// The queue of states we still need to check [state, heuristic]
-	const processedStates = {};														// A list of all states we have visited to not duplicate [previous state, move to get to state]
+	const priorityQueue = [[starting_state, calculateHeuristic(starting_state), 0]];	// The queue of states we still need to check [state, heuristic, moveCount]
+	const processedStates = {};															// A list of all states we have visited to not duplicate [previous state, move to get to state]
 	processedStates[starting_state] = [null, null];
 
 	// Continuously processes the queue of the states with the lowest heuristic
 	while(priorityQueue.length != 0) {
-		let current_state = priorityQueue.pop()[0];
+		const current = priorityQueue.pop();
+		let currentState = current[0];
 
 		// If we solved the puzzle, returns the moveset to solve it
-		if(checkSolved(current_state)) {
 			console.log('Found a solution!');
+		if(checkSolved(currentState)) {
 
-			displayPuzzle(current_state);
+			displayPuzzle(currentState);
 
 			// Reversed back up the tree to find the solution
-			const path = [processedStates[current_state][1]];
-			while(processedStates[current_state][0] != null) {
-				current_state = processedStates[current_state][0];
-				path.push(processedStates[current_state][1]);
+			const path = [processedStates[currentState][1]];
+			while(processedStates[currentState][0] != null) {
+				currentState = processedStates[currentState][0];
+				path.push(processedStates[currentState][1]);
 			}
 
 			return path.slice(0, path.length - 1).reverse(); // Returns the (backwards) path leading to the solution
 		}
 
 		// We didn't solve it, so try all other combinations from that state
-		for(const nextState of nextStates(current_state)) {
+		for(const nextState of nextStates(currentState)) {
 			const nextBoardState = nextState[0];
 			const moveOfState = nextState[1];
+			const moveCount = current[2] + 1;
 
 			// If we've seen the state, don't check it again
 			if(nextBoardState in processedStates) continue;
 
-			const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState)];
 			const start = Date.now();
+			const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState) + moveCount, moveCount];
 			let pushed = false;
 
 			// TODO: switch to binary search for O(log n)
@@ -111,6 +113,7 @@ function solvePuzzleAStar(starting_state) {
 		if(priorityQueue[priorityQueue.length - 1][1] < last) {
 			last = priorityQueue[priorityQueue.length - 1][1];
 			console.log(`Closest Solution Found: ${last} in ${(Date.now() - startTime) / 1000}s`);
+			processedStates[nextBoardState] = [currentState, moveOfState];
 		}
 	}
 
