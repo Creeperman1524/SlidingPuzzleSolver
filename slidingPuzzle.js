@@ -1,6 +1,5 @@
 // The varialbe size of the puzzle
 const SIZE = 4;
-let timeSpent = 0;
 
 // An array of the completed puzzle to compare to
 const COMPLETED_PUZZLE = [];
@@ -11,6 +10,8 @@ COMPLETED_PUZZLE.push(0);
 
 // The global start time to track how long it takes to solve
 let startTime = 0;
+let sortTime = 0;
+let nodeCount = 0;
 
 // Generates a random sliding puzzle (not guaranteed to be solvable ?)
 function generatePuzzle() {
@@ -50,9 +51,6 @@ function displayPuzzle(puzzle) {
 	console.log(display);
 }
 
-// The lowest calculated heuristic for logging purposes
-let last = 99;
-
 // Solves the puzzle using the A* method
 // with a Manhattan Distance heuristic
 function solvePuzzleAStar(starting_state) {
@@ -66,10 +64,8 @@ function solvePuzzleAStar(starting_state) {
 		let currentState = current[0];
 
 		// If we solved the puzzle, returns the moveset to solve it
-			console.log('Found a solution!');
 		if(checkSolved(currentState)) {
-
-			displayPuzzle(currentState);
+			console.log(`Found a solution in ${(Date.now() - startTime) / 1000}s`);
 
 			// Reversed back up the tree to find the solution
 			const path = [processedStates[currentState][1]];
@@ -78,11 +74,18 @@ function solvePuzzleAStar(starting_state) {
 				path.push(processedStates[currentState][1]);
 			}
 
-			return path.slice(0, path.length - 1).reverse(); // Returns the (backwards) path leading to the solution
+			return path.slice(0, path.length - 1).reverse(); // Returns the path leading to the solution
 		}
 
 		// We didn't solve it, so try all other combinations from that state
 		for(const nextState of nextStates(currentState)) {
+			nodeCount++;
+
+			// Logging for longer board solves
+			if(nodeCount % 100000 == 0) {
+				console.log(`Searched ${nodeCount} boards in ${(Date.now() - startTime) / 1000}s with ${priorityQueue.length} in queue (${sortTime / 1000}s)`);
+			}
+
 			const nextBoardState = nextState[0];
 			const moveOfState = nextState[1];
 			const moveCount = current[2] + 1;
@@ -90,12 +93,12 @@ function solvePuzzleAStar(starting_state) {
 			// If we've seen the state, don't check it again
 			if(nextBoardState in processedStates) continue;
 
-			const start = Date.now();
 			const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState) + moveCount, moveCount];
 			let pushed = false;
 
 			// TODO: switch to binary search for O(log n)
 			// Inserts the new state based on the calculated heuristic in reverse numerical order
+			const start = Date.now();
 			for (let i = 0; i < priorityQueue.length; i++) {
 				if(nextInQueue[1] >= priorityQueue[i][1]) {
 					priorityQueue.splice(i, 0, nextInQueue);
@@ -104,20 +107,14 @@ function solvePuzzleAStar(starting_state) {
 				}
 			}
 			if(!pushed) priorityQueue.push(nextInQueue);
-			timeSpent += Date.now() - start;
+			sortTime += Date.now() - start;
 
-			processedStates[nextBoardState] = [current_state, moveOfState];
-		}
-
-		// Logs the lowest heuristic found
-		if(priorityQueue[priorityQueue.length - 1][1] < last) {
-			last = priorityQueue[priorityQueue.length - 1][1];
-			console.log(`Closest Solution Found: ${last} in ${(Date.now() - startTime) / 1000}s`);
 			processedStates[nextBoardState] = [currentState, moveOfState];
 		}
 	}
 
 	console.log('No solution :(');
+	return [];
 }
 
 // Returns a list of the next possible board states from
@@ -196,21 +193,24 @@ function main() {
 	}
 
 	const puzzle = generatePuzzle();
-
 	displayPuzzle(puzzle);
+
+	console.log('Solving...');
 
 	startTime = Date.now();
 	const path = solvePuzzleAStar(puzzle);
 
-	console.log('Time spent sorting: ' + timeSpent / 1000 + 's');
-	// TODO: solution doesn't seem to be optimal
-	console.log('Solution length: ' + path.length);
+	console.log('Moves: ' + path.length);
+	console.log('Boards explored: ' + nodeCount);
 
 	const directions = [null, 'top', 'bottom', 'left', 'right'];
-	for (const direction of path) {
-		console.log(directions[direction]);
+
+	let pathString = 'Solution: ' + directions[path[0]];
+	for (let i = 1; i < path.length; i++) {
+		pathString += ', ' + directions[path[i]];
 	}
 
+	console.log(pathString);
 }
 
 main();
