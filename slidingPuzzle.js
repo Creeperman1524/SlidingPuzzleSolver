@@ -94,19 +94,16 @@ function solvePuzzleAStar(starting_state) {
 			if(nextBoardState in processedStates) continue;
 
 			const nextInQueue = [nextBoardState, calculateHeuristic(nextBoardState) + moveCount, moveCount];
-			let pushed = false;
 
-			// TODO: switch to binary search for O(log n)
 			// Inserts the new state based on the calculated heuristic in reverse numerical order
+			// using binary search
 			const start = Date.now();
-			for (let i = 0; i < priorityQueue.length; i++) {
-				if(nextInQueue[1] >= priorityQueue[i][1]) {
-					priorityQueue.splice(i, 0, nextInQueue);
-					pushed = true;
-					break;
-				}
+			const index = binarySearch(priorityQueue, nextInQueue[1]);
+			if(index != -1) {
+				priorityQueue.splice(index, 0, nextInQueue);
+			} else {
+				priorityQueue.splice(0, 0, nextInQueue);
 			}
-			if(!pushed) priorityQueue.push(nextInQueue);
 			sortTime += Date.now() - start;
 
 			processedStates[nextBoardState] = [currentState, moveOfState];
@@ -160,6 +157,27 @@ function nextStates(puzzle) {
 	}
 
 	return states;
+}
+
+// Uses binary search to insert a new board to search
+// in O(log n) time
+function binarySearch(arr, value) {
+	let start = 0;
+	let end = arr.length - 1;
+	let middle = 0;
+
+	while(start <= end) {
+		middle = parseInt((end + start) / 2);
+
+		if(arr[middle][1] > value) { 		// Belongs to the right end
+			start = middle + 1;
+		} else if(arr[middle][1] < value) {	// Belongs to the left end
+			end = middle - 1;
+		} else {						// We found the spot
+			return middle;
+		}
+	}
+	return -1; // Nothing in the array
 }
 
 // Uses a heuristic of the minimum amount of moves needed to solve the puzzle
@@ -216,6 +234,3 @@ function main() {
 main();
 
 // puzzle = [1, 13, 9, 7, 6, 5, 10, 12, 14, 15, 0, 8, 2, 3, 11, 4];
-// 18.556s sorting, 18.699s solving (bubble sort) 					O(n^2)
-// 3.996s sorting, 4.101s solving 	(merge sort)					O(n log n)
-// 0.032s sorting, 0.137s solving 	(inserting into sorted list)	O(n)
