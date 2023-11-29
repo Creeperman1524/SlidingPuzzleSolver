@@ -29,6 +29,39 @@ function generatePuzzle() {
 	return puzzle;
 }
 
+// Checks whether a given starting board is solvable
+// Thanks to https://www.cs.princeton.edu/courses/archive/spring19/cos226/assignments/8puzzle/specification.php
+function checkSolvable(puzzle) {
+	if (SIZE % 2 == 0) { // Even size
+		// The board is solvable when the amount of inversions (see below) + the row number of the blank tile is odd when SIZE is even
+		return (countInversions(puzzle) + Math.floor(puzzle.indexOf(0) / SIZE)) % 2 == 1;
+	} else { // Odd size
+		// The board is solvable when the amount of inversions (see below) is even when SIZE is even
+		return countInversions(puzzle) % 2 == 0;
+	}
+}
+
+// An inversion is any pair of tiles i and j where i < j but i appears after j when considering the board in row-major order
+// Thanks to https://www.cs.princeton.edu/courses/archive/spring19/cos226/assignments/8puzzle/specification.php
+function countInversions(puzzle) {
+	let inversions = 0;
+
+	for (let i = 0; i < SIZE * SIZE - 1; i++) {
+		if(puzzle[i] == 0) continue;
+		for (let j = i + 1; j < SIZE * SIZE; j++) {
+			if(puzzle[j] == 0) continue;
+			const iTile = puzzle[i];
+			const jTile = puzzle[j];
+
+			if(iTile < jTile) continue;
+
+			inversions++;
+
+		}
+	}
+	return inversions;
+}
+
 // Creates the dynamic horizontal bar for displaying
 let horizontalBar = '\n';
 for (let i = 0; i < SIZE; i++) {
@@ -212,6 +245,11 @@ function main() {
 
 	const puzzle = generatePuzzle();
 	displayPuzzle(puzzle);
+
+	if(!checkSolvable(puzzle)) {
+		console.log('Puzzle is not solvable :(');
+		return;
+	}
 
 	console.log('Solving...');
 
