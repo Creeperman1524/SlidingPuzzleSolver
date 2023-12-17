@@ -131,12 +131,10 @@ function convertToArray() {
 // Solves the puzzle and displays the path
 async function solve() {
 	const puzzle = convertToArray();
-	console.log(puzzle);
 
 	// eslint-disable-next-line no-undef
 	const path = solvePuzzle(puzzle);
 
-	console.log('Showing solution...');
 	for(const m of path) {
 		move(m);
 		await new Promise(r => setTimeout(r, 100));

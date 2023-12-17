@@ -13,22 +13,6 @@ let startTime = 0;
 let sortTime = 0;
 let nodeCount = 0;
 
-// Generates a random sliding puzzle (not guaranteed to be solvable)
-function generatePuzzle() {
-	const puzzle = [];
-	const nums = COMPLETED_PUZZLE.slice(); // Copies the array
-
-	for (let i = 0; i < COMPLETED_PUZZLE.length; i++) {
-		const randomIndex = Math.floor(Math.random() * nums.length);
-		const randomNum = nums[randomIndex];
-		puzzle.push(randomNum);
-
-		nums.splice(randomIndex, 1);
-	}
-
-	return puzzle;
-}
-
 // Checks whether a given starting board is solvable
 // Thanks to https://www.cs.princeton.edu/courses/archive/spring19/cos226/assignments/8puzzle/specification.php
 function checkSolvable(puzzle) {
@@ -58,28 +42,6 @@ function countInversions(puzzle) {
 		}
 	}
 	return inversions;
-}
-
-// Creates the dynamic horizontal bar for displaying
-let horizontalBar = '\n';
-for (let i = 0; i < SIZE; i++) {
-	horizontalBar += '-----';
-}
-horizontalBar += '-\n';
-
-// Displays the current puzzle to the console
-function displayPuzzle(puzzle) {
-	let display = '';
-
-	for (let i = 0; i < puzzle.length; i++) {
-		if(i % SIZE == 0) display += horizontalBar;
-		display += `| ${puzzle[i]} ` + (puzzle[i] >= 10 ? '' : ' ');
-		if(i % SIZE == SIZE - 1) display += '|';
-	}
-
-	display += horizontalBar;
-
-	console.log(display);
 }
 
 // Solves the puzzle using the A* method
@@ -243,8 +205,6 @@ function solvePuzzle(puzzle) {
 		console.error('SIZE IS TOO SMALL');
 		return;
 	}
-
-	displayPuzzle(puzzle);
 
 	if(!checkSolvable(puzzle)) {
 		console.log('Puzzle is not solvable :(');
