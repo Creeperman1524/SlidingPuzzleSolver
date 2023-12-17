@@ -1,5 +1,5 @@
 // The varialbe size of the puzzle
-const SIZE = 4;
+const SIZE = 3;
 
 // An array of the completed puzzle to compare to
 const COMPLETED_PUZZLE = [];
@@ -13,7 +13,7 @@ let startTime = 0;
 let sortTime = 0;
 let nodeCount = 0;
 
-// Generates a random sliding puzzle (not guaranteed to be solvable ?)
+// Generates a random sliding puzzle (not guaranteed to be solvable)
 function generatePuzzle() {
 	const puzzle = [];
 	const nums = COMPLETED_PUZZLE.slice(); // Copies the array
@@ -54,9 +54,7 @@ function countInversions(puzzle) {
 			const jTile = puzzle[j];
 
 			if(iTile < jTile) continue;
-
 			inversions++;
-
 		}
 	}
 	return inversions;
@@ -86,10 +84,10 @@ function displayPuzzle(puzzle) {
 
 // Solves the puzzle using the A* method
 // with a Manhattan Distance heuristic
-function solvePuzzleAStar(starting_state) {
-	const priorityQueue = [[starting_state, calculateHeuristic(starting_state), 0]];	// The queue of states we still need to check [state, heuristic, moveCount]
+function solvePuzzleAStar(startingState) {
+	const priorityQueue = [[startingState, calculateHeuristic(startingState), 0]];	// The queue of states we still need to check [state, heuristic, moveCount]
 	const processedStates = {};															// A list of all states we have visited to not duplicate [previous state, move to get to state]
-	processedStates[starting_state] = [null, null];
+	processedStates[startingState] = [null, null];
 
 	// Continuously processes the queue of the states with the lowest heuristic
 	while(priorityQueue.length != 0) {
@@ -237,18 +235,20 @@ function checkSolved(puzzle) {
 	return true;
 }
 
-function main() {
+function solvePuzzle(puzzle) {
+	startTime = 0;
+	sortTime = 0;
+	nodeCount = 0;
 	if(SIZE < 3) {
 		console.error('SIZE IS TOO SMALL');
 		return;
 	}
 
-	const puzzle = generatePuzzle();
 	displayPuzzle(puzzle);
 
 	if(!checkSolvable(puzzle)) {
 		console.log('Puzzle is not solvable :(');
-		return;
+		return [];
 	}
 
 	console.log('Solving...');
@@ -267,8 +267,6 @@ function main() {
 	}
 
 	console.log(pathString);
+
+	return path;
 }
-
-main();
-
-// puzzle = [1, 13, 9, 7, 6, 5, 10, 12, 14, 15, 0, 8, 2, 3, 11, 4];
