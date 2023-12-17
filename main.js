@@ -132,6 +132,8 @@ function convertToArray() {
 async function solve() {
 	const puzzle = convertToArray();
 
+	document.getElementById('board').innerHTML = `Board: [${puzzle}]`;
+
 	// eslint-disable-next-line no-undef
 	const path = solvePuzzle(puzzle);
 

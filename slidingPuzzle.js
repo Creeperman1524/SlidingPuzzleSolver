@@ -58,7 +58,11 @@ function solvePuzzleAStar(startingState) {
 
 		// If we solved the puzzle, returns the moveset to solve it
 		if(checkSolved(currentState)) {
-			console.log(`Found a solution in ${(Date.now() - startTime) / 1000}s`);
+			document.getElementById('boardsExplored').innerHTML = `Boards explored: ${nodeCount}`;
+			document.getElementById('elapsedTime').innerHTML = `Elapsed time: ${(Date.now() - startTime) / 1000}s`;
+			document.getElementById('queueLength').innerHTML = `Queue length: ${priorityQueue.length}`;
+			document.getElementById('sortTime').innerHTML = `Elapsed sort time: ${(sortTime) / 1000}s`;
+			document.getElementById('finalTime').innerHTML = `Found solution in: ${(Date.now() - startTime) / 1000}s`;
 
 			// Reversed back up the tree to find the solution
 			const path = [processedStates[currentState][1]];
@@ -76,7 +80,10 @@ function solvePuzzleAStar(startingState) {
 
 			// Logging for longer board solves
 			if(nodeCount % 100000 == 0) {
-				console.log(`Searched ${nodeCount} boards in ${(Date.now() - startTime) / 1000}s with ${priorityQueue.length} in queue (${sortTime / 1000}s)`);
+				document.getElementById('boardsExplored').innerHTML = `Boards explored: ${nodeCount}`;
+				document.getElementById('elapsedTime').innerHTML = `Elapsed time: ${(Date.now() - startTime) / 1000}s`;
+				document.getElementById('queueLength').innerHTML = `Queue length: ${priorityQueue.length}`;
+				document.getElementById('sortTime').innerHTML = `Elapsed sort time: ${(sortTime) / 1000}s`;
 			}
 
 			const nextBoardState = nextState[0];
@@ -197,36 +204,29 @@ function checkSolved(puzzle) {
 	return true;
 }
 
+// eslint-disable-next-line no-unused-vars
 function solvePuzzle(puzzle) {
 	startTime = 0;
 	sortTime = 0;
 	nodeCount = 0;
-	if(SIZE < 3) {
-		console.error('SIZE IS TOO SMALL');
-		return;
-	}
 
 	if(!checkSolvable(puzzle)) {
 		console.log('Puzzle is not solvable :(');
 		return [];
 	}
 
-	console.log('Solving...');
-
 	startTime = Date.now();
 	const path = solvePuzzleAStar(puzzle);
 
-	console.log('Moves: ' + path.length);
-	console.log('Boards explored: ' + nodeCount);
+	document.getElementById('moveCount').innerHTML = `Moves: ${path.length}`;
 
-	const directions = [null, 'top', 'bottom', 'left', 'right'];
-
-	let pathString = 'Solution: ' + directions[path[0]];
+	const directions = [null, 'U', 'D', 'L', 'R'];
+	let pathString = directions[path[0]];
 	for (let i = 1; i < path.length; i++) {
 		pathString += ', ' + directions[path[i]];
 	}
 
-	console.log(pathString);
+	document.getElementById('solution').innerHTML = `Solution: ${pathString}`;
 
 	return path;
 }
