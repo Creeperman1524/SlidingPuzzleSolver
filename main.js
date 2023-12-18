@@ -1,10 +1,11 @@
 // Thanks to https://codepen.io/camchambers/pen/rNzdJzG
 
-const size = 3;
-const numberOfTiles = size ** 2;
+let size = 3;
+let numberOfTiles = size * size;
 let zeroTileIndex = numberOfTiles;
 
 const tileContainer = document.getElementById('tiles');
+const root = document.querySelector(':root');
 
 // The bottom buttons
 const solveButton = document.getElementById('solve');
@@ -19,12 +20,31 @@ scrambleButton.addEventListener('click', function() {
 
 const resetButton = document.getElementById('reset');
 resetButton.addEventListener('click', function() {
-	removeTiles();
-	loadTiles();
+	// Cancel the solve from the other file
+	// eslint-disable-next-line no-undef
+	cancelled = true;
+	newGame();
+});
+
+const x3Button = document.getElementById('3x3');
+x3Button.addEventListener('click', function() {
+	size = 3;
+	numberOfTiles = size * size;
+	root.style.setProperty('--size', `${240 / size}px`);
+	newGame();
+});
+
+const x4Button = document.getElementById('4x4');
+x4Button.addEventListener('click', function() {
+	size = 4;
+	numberOfTiles = size * size;
+	root.style.setProperty('--size', `${240 / size}px`);
+	newGame();
 });
 
 newGame();
 function newGame() {
+	removeTiles();
 	loadTiles();
 }
 
@@ -122,7 +142,7 @@ function convertToArray() {
 
 	// Remaps the '9' tile to 0 as used in the solver as well as converting it from strings -> ints
 	puzzle = puzzle.map((x) => {
-		return x == '9' ? 0 : parseInt(x);
+		return x == numberOfTiles ? 0 : parseInt(x);
 	});
 
 	return puzzle;
@@ -134,8 +154,12 @@ async function solve() {
 
 	document.getElementById('board').innerHTML = `Board: [${puzzle}]`;
 
+	document.getElementById('finalTime').innerHTML = 'Found solution in: ';
+	document.getElementById('moveCount').innerHTML = 'Moves: ';
+	document.getElementById('solution').innerHTML = 'Solution: ';
+
 	// eslint-disable-next-line no-undef
-	const path = solvePuzzle(puzzle);
+	const path = await solvePuzzle(puzzle);
 
 	for(const m of path) {
 		move(m);

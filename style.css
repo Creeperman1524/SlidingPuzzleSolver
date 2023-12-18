@@ -1,3 +1,7 @@
+:root {
+	--size: 80px;
+}
+
 html {
 	background: #222;
 	font-family: Verdana;
@@ -28,7 +32,13 @@ h1 {
 	margin: 0 auto;
 	position: relative;
 	padding: 8px;
-	border-radius: 0.5rem;
+}
+
+#sizes {
+	width: 240px;
+	margin: 0 auto;
+	position: relative;
+	padding: 8px;
 }
 
 #info {
@@ -40,6 +50,11 @@ h1 {
 	background-color: #f0f0f0;
 	border: solid #adadad;
 	border-radius: 0.5rem;
+}
+
+#notice {
+	text-align: center;
+	color: white;
 }
 
 #footer {
@@ -63,6 +78,10 @@ h1 {
 	color: rgb(0, 190, 0);
 }
 
+#scramble {
+	color: rgb(69, 69, 255);
+}
+
 .zeroTile {
 	background-color: #adadad;
 	border: none;
@@ -71,8 +90,8 @@ h1 {
 
 .tileButton {
 	font-size: 32px;
-	height: 80px;
-	width: 80px;
+	height: var(--size);
+	width: var(--size);
 	cursor: pointer;
 }
 
@@ -81,7 +100,15 @@ h1 {
 	height: 30px;
 	width: 32%;
 	cursor: pointer;
-	border-radius: 0.2rem
+	border-radius: 1rem
+}
+
+.sizeButton {
+	font-size: 18px;
+	height: 30px;
+	width: calc(50% - 4px);
+	cursor: pointer;
+	border-radius: 1rem;
 }
 
 h2 {

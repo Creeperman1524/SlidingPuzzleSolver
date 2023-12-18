@@ -1,17 +1,16 @@
 // The varialbe size of the puzzle
-const SIZE = 3;
+let SIZE = 3;
 
 // An array of the completed puzzle to compare to
-const COMPLETED_PUZZLE = [];
-for (let i = 0; i < SIZE * SIZE - 1; i++) {
-	COMPLETED_PUZZLE.push(i + 1);
-}
-COMPLETED_PUZZLE.push(0);
+let COMPLETED_PUZZLE = [];
 
 // The global start time to track how long it takes to solve
 let startTime = 0;
+let previousTime = 0;
 let sortTime = 0;
 let nodeCount = 0;
+
+let cancelled = false;
 
 // Checks whether a given starting board is solvable
 // Thanks to https://www.cs.princeton.edu/courses/archive/spring19/cos226/assignments/8puzzle/specification.php
@@ -46,13 +45,13 @@ function countInversions(puzzle) {
 
 // Solves the puzzle using the A* method
 // with a Manhattan Distance heuristic
-function solvePuzzleAStar(startingState) {
+async function solvePuzzleAStar(startingState) {
 	const priorityQueue = [[startingState, calculateHeuristic(startingState), 0]];	// The queue of states we still need to check [state, heuristic, moveCount]
 	const processedStates = {};															// A list of all states we have visited to not duplicate [previous state, move to get to state]
 	processedStates[startingState] = [null, null];
 
 	// Continuously processes the queue of the states with the lowest heuristic
-	while(priorityQueue.length != 0) {
+	while(priorityQueue.length != 0 && !cancelled) {
 		const current = priorityQueue.pop();
 		let currentState = current[0];
 
@@ -78,8 +77,13 @@ function solvePuzzleAStar(startingState) {
 		for(const nextState of nextStates(currentState)) {
 			nodeCount++;
 
-			// Logging for longer board solves
-			if(nodeCount % 100000 == 0) {
+			// Logging for longer board solves, updating the screen every 500ms
+			if(Date.now() - previousTime > 500) {
+				previousTime = Date.now();
+				// Give the chance for the browser to update
+				await new Promise(r => setTimeout(r, 1));
+				// console.log(`Searched ${nodeCount} boards in ${(Date.now() - startTime) / 1000}s with ${priorityQueue.length} in queue (${sortTime / 1000}s) (${sliceTime / 1000})s`);
+
 				document.getElementById('boardsExplored').innerHTML = `Boards explored: ${nodeCount}`;
 				document.getElementById('elapsedTime').innerHTML = `Elapsed time: ${(Date.now() - startTime) / 1000}s`;
 				document.getElementById('queueLength').innerHTML = `Queue length: ${priorityQueue.length}`;
@@ -99,6 +103,8 @@ function solvePuzzleAStar(startingState) {
 			// using binary search
 			const start = Date.now();
 			const index = binarySearch(priorityQueue, nextInQueue[1]);
+
+			// TODO: moving arrays around is no good
 			if(index != -1) {
 				priorityQueue.splice(index, 0, nextInQueue);
 			} else {
@@ -111,6 +117,7 @@ function solvePuzzleAStar(startingState) {
 	}
 
 	console.log('No solution :(');
+	cancelled = false;
 	return [];
 }
 
@@ -173,7 +180,7 @@ function binarySearch(arr, value) {
 			start = middle + 1;
 		} else if(arr[middle][1] < value) {	// Belongs to the left end
 			end = middle - 1;
-		} else {						// We found the spot
+		} else {							// We found the spot
 			return middle;
 		}
 	}
@@ -205,7 +212,16 @@ function checkSolved(puzzle) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function solvePuzzle(puzzle) {
+async function solvePuzzle(puzzle) {
+	SIZE = Math.sqrt(puzzle.length);
+
+	COMPLETED_PUZZLE = [];
+	// Calculates what the final puzzle should look like
+	for (let i = 0; i < SIZE * SIZE - 1; i++) {
+		COMPLETED_PUZZLE.push(i + 1);
+	}
+	COMPLETED_PUZZLE.push(0);
+
 	startTime = 0;
 	sortTime = 0;
 	nodeCount = 0;
@@ -216,7 +232,7 @@ function solvePuzzle(puzzle) {
 	}
 
 	startTime = Date.now();
-	const path = solvePuzzleAStar(puzzle);
+	const path = await solvePuzzleAStar(puzzle);
 
 	document.getElementById('moveCount').innerHTML = `Moves: ${path.length}`;
 
